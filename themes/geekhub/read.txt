@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+WP-KAMA.RU
+
+ - скриншот
+ - описание
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+1)     <title><?php bloginfo('name'); wp_title(); ?></title>
+2)    <link rel="stylesheet" href="<?php bloginfo(stylesheet_url) ?>"> /будет позже корректное подключение/
+</head>
+<body>
+<!--ссылка на главную-->
+    <a href="<?php echo home_url() ?>">23</a>
+
+<!--ссылка в корень шаблона-->  
+    <?php bloginfo(template_url) ?>
+
+<!--заголовок последнего топика в блоге-->
+    <?php the_title()?> 
+
+<!--контент последнего топика в блоге, вне цыкла не выводится-->
+     <?php the_content()?> 
+     
+<!--loop стандартный цикл вывода постов-->
+     <?php if ( have_posts() ) : while (have_posts() ) : the_post(); ?>
+                        <li>
+                           <?php the_post_thumbnail('full', 'class=thumbnail') ?>
+                           <span class="date"><?php the_time('d.m.y') ?></span>
+                           <h2><a href="<?php the_permalink() ?>"><?php the_title()?></a></h2>  
+                           <?php the_excerpt() ?>
+                           <a href="<?php the_permalink() ?>">Read about us</a>
+                           <p><?php the_tags() ?></p>
+                        </li>
+     <?php endwhile; ?>
+     <!--post navigation-->
+     <?php else: ?>
+     <!--no posts found-->
+     <?php endif; ?>
+     <hr>
+ 
+<!--вывод развернутой инфы о ласт посте-->
+     <?php var_dump($post); ?> <br>          
+                            
+<!--вывод последнего поста без цикла, инфа выше-->
+    <h2><?php echo $post->post_title ?> </h2>  
+     <?php echo $post->post_content ?> <br>
+     <p>Comments: <?php echo $post->comment_count ?> </p>
+     <p>Date: <?php echo $post->post_date ?></p>
+
+ <!--вывод развернутой инфы о ласт постах (к-во в админке)-->
+     <?php var_dump($posts); ?> <br>    
+     
+<!--кастомный цикл вывода постов-->
+    <?php foreach($posts as $item_post): ?>
+        <h4><?php echo $item_post->post_title ?></h4>
+        <?php echo $item_post->post_content ?>
+        <p>Date:<?php echo $item_post->post_date ?></p>
+    <?php endforeach; ?> <br><br><br>
+	
+3) <!-- вызов частей кода на главной (новые файлы) -->
+<?php get_header() ?>
+<?php get_sidebar() ?>
+<?php get_footer() ?>
+    
+4) <!-- вызов места под админбар (перед </head>) -->   
+<?php wp_head() ?>
+<!-- вызов админбара (перед </body>) -->   
+<?php wp_footer() ?>
+
+5) <!-- корректное подключение скриптов и стилей (в отдельном файле functions.php) -->
+<?php 
+/**
+* загружаемые стили и скрипты
+**/
+function load_style_script() {
+    wp_enqueue_script('js-file', get_template_directory_uri() . '/js/js-file.js');
+    wp_enqueue_style('style', get_template_directory_uri() . '/style.css');
+}
+/**
+* загружаем стили и скритпы
+**/
+add_action('wp_enqueue_scripts', 'load_style_script');
+?>
+
+6) <!--Теги в топике-->
+<?php the_tags() ?>
+
+7) <!-- Подключаем в фанкшнс саппорт миниатюр -->
+/**
+* подключаем возможность юзать миниатюры
+**/
+add_theme_support('post-thumbnails');
+
+8) <!-- тег img меняем на вывод миниатюры, где размер, класс -->
+<?php the_post_thumbnail('full', 'class=thumbnail') ?>
+
+9) <!-- создаем страницы в меню (пейдж) -->
+
+
+10) <!--Меню подключаем в фанкшнс: menu - КЛАСС ul, название-->
+/**
+* подключаем возможность юзать меню
+**/
+register_nav_menu('menu', 'Главное меню');
+(обязательные классы:для активной лишки - current-menu-item)
+
+
+11) <!-- подключаем меню в шапке - удаляем ul: класс CSS, убоать контейнер, убрать класс -->   
+    
+ <?php wp_nav_menu(array('theme_location' => 'menu', 'container' => false, 'menu_class' => '')); ?>   
+    
+    
+12)<!--Виджеты подключаем в фанкшнс-->
+/**
+* подключаем виджеты в сайдбаре
+**/
+register_sidebar(array(
+    'name' => 'widgers in sitebar',
+    'id' => 'sidebarid',
+    'description' => 'here is widget',
+    'before_widget' => '<div class="wrapcat">',
+    'after_widget' => '</div>',
+    'before_title' => '<h3>',
+    'after_title' => '</h3>',
+));
+  
+   
+
+13)<!--Подключаем виджеты в сайдбар(другое место)-->
+(обязательное для CSS - каждый виджет обернуть в див, заголовки в виджетах - это h2, но можно сменить на то, что нужно. обращаться к ул без класса)
+для активной ли в категориях: .current-cat
+
+<?php if(!dynamic_sidebar('sidebarid')): ?>
+                       <div class="wrapcat">
+                           <h3>Категории</h3>
+                           <ul>
+                               <?php wp_list_categories(array('title_li' => '')); ?>
+                           </ul>
+                       </div>
+                       <?php endif; ?>
+
+
+14) Сингл-пейдж:  single.php - создаем новый файл - копируем с index (правим, цитата меняется на the_content)
+
+
+15) Пейдж (кастомная): page.php - копируем из индекса:
+    the_content
+    the_title
+
+16) Страница отдельной категории: копируем индекс.
+<?php single_cat_title('А вот и ') ?> - название категории
+
+17) Страница результатов поиска: search.php добавить, скопировить индекс + добавить "нет результатов" 
+Кастомный Поиск: <... name="s" id="s">
+          <form action="<?php echo home_url('/'); ?>" ...>
+
+18) пагинация в цикле вместо <!--post navigation-->: 
+  <div class="pagination">
+         <?php
+            global $wp_query;
+
+            $big = 999999999; // need an unlikely integer
+
+            echo paginate_links( array(
+                'base' => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+                'format' => '?paged=%#%',
+                'current' => max( 1, get_query_var('paged') ),
+                'total' => $wp_query->max_num_pages,
+                'prev_text' => '« в прошлое',
+	            'next_text' => 'в будущее »'
+            ) );
+?>
+         
+     </div>
+
+19) страница топиков по тегам: создаем tag.php - копируем с категории, + заголовок <?php single_tag_title('А тут ') ?> 
+
+20) страница 404: создаем 404.php
+и в файле htaccess - ErrorDocument 404 /kit/index.php?error=404
+
+21) Добавление комментариев - <?php comments_template(); ?> перед закрытием цыкла <?php endwhile; ?>
+стили к комментариям:
+/*Комментарии*/
+
+#respond,
+.commentlist,
+.comment-body {
+    border: 1px solid #656565;
+    border-radius: 15px;
+    padding: 10px;
+    margin: 20px 0;
+}
+#respond h3 {
+    margin: 0 0 15px 0;
+}
+#commentform p {
+    margin: 10px 0;
+}
+#commentform p a {
+    color: cadetblue;
+    text-decoration: underline;
+}
+#commentform textarea {
+    border: 1px solid #656565;
+    border-radius: 15px;
+    padding: 10px;
+}
+#commentform input[type="submit"] {
+    background: cadetblue;
+    border: 1px solid #656565;
+    border-radius: 15px;
+    padding: 10px;
+    cursor: pointer;
+}
+ol.commentlist li > ul.children > li {
+    padding: 0;
+}
+.section li ul li:nth-child(odd) {
+    border-radius: 15px;
+    background: none;
+}
+.commentlist p {
+    margin: 10px 0;
+    padding: 5px 0;
+    border-top: 1px solid #656565;
+    border-bottom: 1px solid #656565;
+}
+
+
+
+
+22) Слайдер: (фанкшнс+админка добавляем картинки)
+/**
+* подключаем слайдер в фанкшнс
+**/
+add_action('init', 'slider');
+function slider() {
+    register_post_type('slider', array(
+        'public' => true,
+        'supports' => array('title', 'thumbnail'),
+        'labels' => array('name' => 'Слайдер')
+    ));
+}
+
+
+23) Слайдер в шаблон: 302, 320 - размеры картинок, 'post_per_page' => -1 - все картинки, а не так как в настройках постов, порядок ASC (1,2,3)
+
+                              <?php $slider = new WP_Query(array('post_type' => 'slider', 'post_per_page' => -1, 'order' => 'ASC')); ?>
+               
+               <?php if ( $slider->have_posts() ) : ?>
+            <div class="slider">
+              <ul>
+               <?php while ($slider->have_posts() ) : $slider->the_post(); 
+
+?>    
+               <li><?php the_post_thumbnail(array(302, 320)); ?></li>        
+     <?php endwhile; ?>
+                </ul>
+                  </div>
+     <?php else: ?>
+      <p>Место под слайдер</p>
+     <?php endif; ?>
+		
+
+24) Дополнительные поля:
+<p><?php echo get_post_meta($post->ID, 'название поля', true); ?>
+
+
+25) Опции темы (лого+справа\слева) - settings.php (написанный):
+<?php
+//Настройки панели администрирования
+//Регистрация функции настроек
+function theme_settings_init(){
+    register_setting( 'theme_settings', 'theme_settings' );
+}
+// Добавление настроек в меню страницы
+function add_settings_page() {
+add_menu_page( __( 'Опции темы' ), __( 'Опции темы' ), 'manage_options', 'settings', 'theme_settings_page');
+}
+//Добавление действий
+add_action( 'admin_init', 'theme_settings_init' );
+add_action( 'admin_menu', 'add_settings_page' );
+//Сохранение настроек
+function theme_settings_page() { 
+global $select_options; if ( ! isset( $_REQUEST['settings-updated'] ) ) $_REQUEST['settings-updated'] = false;
+?>
+<div>
+<h2 id="title">Настройка темы</h2>
+<?php if ( false !== $_REQUEST['settings-updated'] ) : ?>
+<div id="message" class="updated">
+<p><strong>Настройки сохранены</strong></p>
+</div>
+<?php endif; ?>
+<form method="post" action="options.php">
+<?php settings_fields( 'theme_settings' ); ?>
+<?php $options = get_option( 'theme_settings' ); ?>
+<table>
+<tr valign="top">
+<td>Logo</td>
+<td><input id="theme_settings[custom_logo]" type="text" size="38" name="theme_settings[custom_logo]" value="<?php esc_attr_e( $options['custom_logo'] ); ?>" /></td>
+<td><label> - Укажите url </label></td>
+</tr>
+<?php } ?>
++ в фанкшнс: include('/settings.php');
++ загрузить в админке дефолтную лого, и в урле сменить на: 
+<?php $options = get_option( 'theme_settings' ); ?>
+<?php echo $options['custom_logo'] ?>
+
+
+
+
+26) /**
+* подключаем хлебные крошки в фанкшнс
+**/
+function dimox_breadcrumbs() {
+
+	/* === ОПЦИИ === */
+	$text['home'] = 'Главная'; // текст ссылки "Главная"
+	$text['category'] = 'Архив рубрики "%s"'; // текст для страницы рубрики
+	$text['search'] = 'Результаты поиска по запросу "%s"'; // текст для страницы с результатами поиска
+	$text['tag'] = 'Записи с тегом "%s"'; // текст для страницы тега
+	$text['author'] = 'Статьи автора %s'; // текст для страницы автора
+	$text['404'] = 'Ошибка 404'; // текст для страницы 404
+
+	$show_current = 1; // 1 - показывать название текущей статьи/страницы/рубрики, 0 - не показывать
+	$show_on_home = 0; // 1 - показывать "хлебные крошки" на главной странице, 0 - не показывать
+	$show_home_link = 1; // 1 - показывать ссылку "Главная", 0 - не показывать
+	$show_title = 1; // 1 - показывать подсказку (title) для ссылок, 0 - не показывать
+	$delimiter = ' &raquo; '; // разделить между "крошками"
+	$before = '<span class="current">'; // тег перед текущей "крошкой"
+	$after = '</span>'; // тег после текущей "крошки"
+	/* === КОНЕЦ ОПЦИЙ === */
+
+	global $post;
+	$home_link = home_url('/');
+	$link_before = '<span typeof="v:Breadcrumb">';
+	$link_after = '</span>';
+	$link_attr = ' rel="v:url" property="v:title"';
+	$link = $link_before . '<a' . $link_attr . ' href="%1$s">%2$s</a>' . $link_after;
+	$parent_id = $parent_id_2 = $post->post_parent;
+	$frontpage_id = get_option('page_on_front');
+
+	if (is_home() || is_front_page()) {
+
+		if ($show_on_home == 1) echo '<div class="breadcrumbs"><a href="' . $home_link . '">' . $text['home'] . '</a></div>';
+
+	} else {
+
+		echo '<div class="breadcrumbs" xmlns:v="http://rdf.data-vocabulary.org/#">';
+		if ($show_home_link == 1) {
+			echo '<a href="' . $home_link . '" rel="v:url" property="v:title">' . $text['home'] . '</a>';
+			if ($frontpage_id == 0 || $parent_id != $frontpage_id) echo $delimiter;
+		}
+
+		if ( is_category() ) {
+			$this_cat = get_category(get_query_var('cat'), false);
+			if ($this_cat->parent != 0) {
+				$cats = get_category_parents($this_cat->parent, TRUE, $delimiter);
+				if ($show_current == 0) $cats = preg_replace("#^(.+)$delimiter$#", "$1", $cats);
+				$cats = str_replace('<a', $link_before . '<a' . $link_attr, $cats);
+				$cats = str_replace('</a>', '</a>' . $link_after, $cats);
+				if ($show_title == 0) $cats = preg_replace('/ title="(.*?)"/', '', $cats);
+				echo $cats;
+			}
+			if ($show_current == 1) echo $before . sprintf($text['category'], single_cat_title('', false)) . $after;
+
+		} elseif ( is_search() ) {
+			echo $before . sprintf($text['search'], get_search_query()) . $after;
+
+		} elseif ( is_day() ) {
+			echo sprintf($link, get_year_link(get_the_time('Y')), get_the_time('Y')) . $delimiter;
+			echo sprintf($link, get_month_link(get_the_time('Y'),get_the_time('m')), get_the_time('F')) . $delimiter;
+			echo $before . get_the_time('d') . $after;
+
+		} elseif ( is_month() ) {
+			echo sprintf($link, get_year_link(get_the_time('Y')), get_the_time('Y')) . $delimiter;
+			echo $before . get_the_time('F') . $after;
+
+		} elseif ( is_year() ) {
+			echo $before . get_the_time('Y') . $after;
+
+		} elseif ( is_single() && !is_attachment() ) {
+			if ( get_post_type() != 'post' ) {
+				$post_type = get_post_type_object(get_post_type());
+				$slug = $post_type->rewrite;
+				printf($link, $home_link . $slug['slug'] . '/', $post_type->labels->singular_name);
+				if ($show_current == 1) echo $delimiter . $before . get_the_title() . $after;
+			} else {
+				$cat = get_the_category(); $cat = $cat[0];
+				$cats = get_category_parents($cat, TRUE, $delimiter);
+				if ($show_current == 0) $cats = preg_replace("#^(.+)$delimiter$#", "$1", $cats);
+				$cats = str_replace('<a', $link_before . '<a' . $link_attr, $cats);
+				$cats = str_replace('</a>', '</a>' . $link_after, $cats);
+				if ($show_title == 0) $cats = preg_replace('/ title="(.*?)"/', '', $cats);
+				echo $cats;
+				if ($show_current == 1) echo $before . get_the_title() . $after;
+			}
+
+		} elseif ( !is_single() && !is_page() && get_post_type() != 'post' && !is_404() ) {
+			$post_type = get_post_type_object(get_post_type());
+			echo $before . $post_type->labels->singular_name . $after;
+
+		} elseif ( is_attachment() ) {
+			$parent = get_post($parent_id);
+			$cat = get_the_category($parent->ID); $cat = $cat[0];
+			if ($cat) {
+				$cats = get_category_parents($cat, TRUE, $delimiter);
+				$cats = str_replace('<a', $link_before . '<a' . $link_attr, $cats);
+				$cats = str_replace('</a>', '</a>' . $link_after, $cats);
+				if ($show_title == 0) $cats = preg_replace('/ title="(.*?)"/', '', $cats);
+				echo $cats;
+			}
+			printf($link, get_permalink($parent), $parent->post_title);
+			if ($show_current == 1) echo $delimiter . $before . get_the_title() . $after;
+
+		} elseif ( is_page() && !$parent_id ) {
+			if ($show_current == 1) echo $before . get_the_title() . $after;
+
+		} elseif ( is_page() && $parent_id ) {
+			if ($parent_id != $frontpage_id) {
+				$breadcrumbs = array();
+				while ($parent_id) {
+					$page = get_page($parent_id);
+					if ($parent_id != $frontpage_id) {
+						$breadcrumbs[] = sprintf($link, get_permalink($page->ID), get_the_title($page->ID));
+					}
+					$parent_id = $page->post_parent;
+				}
+				$breadcrumbs = array_reverse($breadcrumbs);
+				for ($i = 0; $i < count($breadcrumbs); $i++) {
+					echo $breadcrumbs[$i];
+					if ($i != count($breadcrumbs)-1) echo $delimiter;
+				}
+			}
+			if ($show_current == 1) {
+				if ($show_home_link == 1 || ($parent_id_2 != 0 && $parent_id_2 != $frontpage_id)) echo $delimiter;
+				echo $before . get_the_title() . $after;
+			}
+
+		} elseif ( is_tag() ) {
+			echo $before . sprintf($text['tag'], single_tag_title('', false)) . $after;
+
+		} elseif ( is_author() ) {
+	 		global $author;
+			$userdata = get_userdata($author);
+			echo $before . sprintf($text['author'], $userdata->display_name) . $after;
+
+		} elseif ( is_404() ) {
+			echo $before . $text['404'] . $after;
+
+		} elseif ( has_post_format() && !is_singular() ) {
+			echo get_post_format_string( get_post_format() );
+		}
+
+		if ( get_query_var('paged') ) {
+			if ( is_category() || is_day() || is_month() || is_year() || is_search() || is_tag() || is_author() ) echo ' (';
+			echo 'Страница ' . get_query_var('paged');
+			if ( is_category() || is_day() || is_month() || is_year() || is_search() || is_tag() || is_author() ) echo ')';
+		}
+
+		echo '</div><!-- .breadcrumbs -->';
+
+	}
+} // end dimox_breadcrumbs()
+
+<!--вывод крошек в шаьблоне--><?php if (function_exists('dimox_breadcrumbs')) dimox_breadcrumbs(); ?>
+
+
+
+
+
+
+1) Динамические ништяки:
+   - копирайт: <p>Копирайт &#169; <?php echo date('Y'); ?> <?php bloginfo('name'); ?></p>
+   - дата: <span class="date"><?php the_time('d.m.y') ?></span>
+   - автор: <p>Автор поста: <?php the_author(); ?></p>
+   - мыло: <?php bloginfo('admin_email') ?>
+   - теги: <?php the_tags() ?>
+   - комментарии: <?php comments_number($zero, $one, $more); ?>
+$zero (строка)
+Текст, который будет показан, если комментариев нет.	По умолчанию: 'Комментариев нет'
+$one (строка)
+Текст, который будет показан, если всего 1 комментарий.
+По умолчанию: '1 комментарий'
+$more (строка)
+Текст, который будет показан, если комментариев больше чем 1.
+По умолчанию: '% комментариев'
+   - просмотры:
+    фанкшнс:
+    /**
+* подключаем счетчик просмотров
+**/
+function getPostViews($postID){
+    $count_key = 'post_views_count';
+    $count = get_post_meta($postID, $count_key, true);
+    if($count==''){
+        delete_post_meta($postID, $count_key);
+        add_post_meta($postID, $count_key, '0');
+        return "0";
+    }
+    return $count;
+}
+function setPostViews($postID) {
+    $count_key = 'post_views_count';
+    $count = get_post_meta($postID, $count_key, true);
+    if($count==''){
+        $count = 0;
+        delete_post_meta($postID, $count_key);
+        add_post_meta($postID, $count_key, '0');
+    }else{
+        $count++;
+        update_post_meta($postID, $count_key, $count);
+    }
+}
+сингл.пхп:
+  в цикле: <?php
+          setPostViews(get_the_ID());
+?>
+
+индекс: там, где выводить: <p>views <?php
+          echo getPostViews(get_the_ID());
+?></p>
+
+  
+</body>
+
+
+
+
+
+
+
+</html>
